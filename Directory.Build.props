@@ -1,0 +1,16 @@
+<Project>
+  <PropertyGroup>
+    <!-- One version for the server, its page and its container image. -->
+    <Version>0.1.0</Version>
+    <AssemblyVersion>$(Version).0</AssemblyVersion>
+    <FileVersion>$(Version).0</FileVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- SQLite for the stream of lines and for the dictionaries. -->
+    <SqliteVersion>10.0.14</SqliteVersion>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,18 @@
+bin/
+obj/
+dist/
+.cache/
+TestResults/
+node_modules/
+web/test-results/
+web/playwright-report/
+*.tsbuildinfo
+*.user
+.vs/
+.idea/
+.vscode/
+
+# The server's data folder: the stream, the dictionaries, the settings and the API key.
+/data/
+/VnMiningServer/data/
+.env

@@ -1,0 +1,22 @@
+services:
+  vn-mining-server:
+    build:
+      context: .
+    init: true
+    # To choose the API key yourself, put VN_MINING_API_KEY=... into a file named .env next to
+    # this one and uncomment the two lines below. Without one the server makes a key the first
+    # time it starts; read it with
+    #   docker compose exec vn-mining-server cat /data/api-key.txt
+    # env_file:
+    #   - .env
+    ports:
+      # Only this machine reaches the server. A tunnel or a reverse proxy in front of it brings
+      # HTTPS, which the page needs to be installed as an app.
+      - "127.0.0.1:8733:8733"
+    volumes:
+      - vn-mining-data:/data
+    restart: unless-stopped
+
+volumes:
+  # The lines with their voices and screenshots, the dictionaries, the settings and the API key.
+  vn-mining-data:

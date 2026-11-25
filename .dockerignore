@@ -1,0 +1,12 @@
+.git
+**/bin
+**/obj
+**/node_modules
+**/dist
+**/test-results
+**/playwright-report
+**/TestResults
+.cache
+data
+VnMiningServer/data
+.env
