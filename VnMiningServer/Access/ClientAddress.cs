@@ -23,14 +23,15 @@ internal static class ClientAddress
         if (IsNear(remote))
         {
             var named = First(context.Request.Headers["CF-Connecting-IP"].ToString());
-            if (named is null)
-            {
-                named = First(context.Request.Headers["X-Forwarded-For"].ToString());
-            }
-
             if (named is not null && IPAddress.TryParse(named, out var parsed))
             {
                 return parsed.ToString();
+            }
+
+            var forwarded = Forwarded(context.Request.Headers["X-Forwarded-For"].ToString());
+            if (forwarded is not null)
+            {
+                return forwarded;
             }
         }
 
@@ -85,6 +86,34 @@ internal static class ClientAddress
         }
 
         return address.IsIPv6LinkLocal || address.IsIPv6UniqueLocal;
+    }
+
+    /// <summary>
+    /// The caller in an X-Forwarded-For header. Every proxy on the way adds the address it saw to the end, so
+    /// the header is read from its end: past the proxies in this machine's own networks, up to the first
+    /// address from outside. What stands before that one the caller wrote itself, and it is not believed.
+    /// </summary>
+    /// <param name="header">The header's value.</param>
+    /// <returns>The address, or <c>null</c> when the header names none.</returns>
+    internal static string? Forwarded(string header)
+    {
+        string? found = null;
+        var parts = header.Split(',');
+        for (var index = parts.Length - 1; index >= 0; index--)
+        {
+            if (!IPAddress.TryParse(parts[index].Trim(), out var address))
+            {
+                break;
+            }
+
+            found = address.ToString();
+            if (!IsNear(address))
+            {
+                break;
+            }
+        }
+
+        return found;
     }
 
     private static string? First(string header)

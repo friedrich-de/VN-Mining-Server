@@ -41,7 +41,7 @@ One key opens everything: the game sends its lines with it, and the page asks fo
 docker compose exec vn-mining-server cat /data/api-key.txt
 ```
 
-To choose the key yourself, set `VN_MINING_API_KEY` (see `compose.yaml`). A browser stays signed in with a cookie that script cannot read. After ten wrong keys in a minute from one address, the server takes no more keys from that address for a minute.
+To choose the key yourself, set `VN_MINING_API_KEY` (see `compose.yaml`) to something long and random; the server takes none under 16 characters. A browser stays signed in with a cookie that script cannot read. After ten wrong keys in a minute from one address, the server takes no more keys from that address for a minute.
 
 ### HTTPS
 

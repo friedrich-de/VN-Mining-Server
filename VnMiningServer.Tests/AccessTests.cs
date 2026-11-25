@@ -212,6 +212,29 @@ public sealed class AccessTests : IDisposable
         Assert.Equal("127.0.0.1", ClientAddress.Of(Request("127.0.0.1", ("X-Forwarded-For", "not an address"))));
     }
 
+    [Theory]
+    [InlineData("203.0.113.1", "203.0.113.1")]
+    [InlineData("203.0.113.1, 10.0.0.1, 172.17.0.1", "203.0.113.1")]
+    [InlineData("192.168.1.20", "192.168.1.20")]
+    [InlineData("192.168.1.20, 10.0.0.1", "192.168.1.20")]
+    [InlineData("2001:db8::7, 10.0.0.1", "2001:db8::7")]
+    public void The_caller_is_the_last_address_from_outside_that_a_proxy_wrote_down(string header, string caller)
+    {
+        Assert.Equal(caller, ClientAddress.Of(Request("127.0.0.1", ("X-Forwarded-For", header))));
+    }
+
+    [Theory]
+    [InlineData("198.51.100.99, 203.0.113.1")]
+    [InlineData("198.51.100.99, 198.51.100.98, 203.0.113.1, 10.0.0.1")]
+    [InlineData("10.9.9.9, 203.0.113.1")]
+    [InlineData("anything, 203.0.113.1")]
+    public void A_caller_cannot_take_another_address_by_writing_one_into_the_header_itself(string header)
+    {
+        // The proxy adds the address it saw, 203.0.113.1, behind what the caller sent. Wrong keys are counted
+        // by that one, whatever the caller wrote before it.
+        Assert.Equal("203.0.113.1", ClientAddress.Of(Request("127.0.0.1", ("X-Forwarded-For", header))));
+    }
+
     [Fact]
     public void A_caller_from_the_internet_cannot_name_another_address()
     {
