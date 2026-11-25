@@ -67,6 +67,12 @@ key = the-api-key
 
 The page hands the file out with both values filled in: open the settings, and under "The game" press **Download mining.txt**. Put it into the game's folder and start the game. Keep the file to yourself, since it holds the key.
 
+Games that send their lines this way:
+
+| Game | Runs on | |
+| --- | --- | --- |
+| 俺たちに翼はない | iPhone, iPad, Apple Vision Pro, Mac | [friedrich-de/Oretsuba_iOS](https://github.com/friedrich-de/Oretsuba_iOS), a native port that sends each line you read with its voice and a screenshot. Its [docs/MINING.md](https://github.com/friedrich-de/Oretsuba_iOS/blob/main/docs/MINING.md) says where the file goes on each device. |
+
 ### Sending lines from your own tool
 
 Anything that can make an HTTP request can send lines: a game engine, a text hooker, a script.
