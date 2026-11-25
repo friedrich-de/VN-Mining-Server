@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <!-- Test names read as sentences, test types stay public for the runner, stubs live as long as their test, and test data is written inline. -->
+    <NoWarn>$(NoWarn);CA1707;CA1515;CA1001;CA1861</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="xunit.v3.mtp-v2" Version="4.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VnMiningServer\VnMiningServer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Two files named the way the server's build names the page's files, one of them as a build on Windows would. -->
+    <EmbeddedResource Include="Resources\index.html" LogicalName="page/index.html" />
+    <EmbeddedResource Include="Resources\app.js" LogicalName="page\assets\app-1a2b3c.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Yomitan's and Hoshidicts' tests of the Japanese rules (Dictionary/Japanese/SOURCES.md in the server). -->
+    <None Include="Dictionary\Japanese\*.tsv" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

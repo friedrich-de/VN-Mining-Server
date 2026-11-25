@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="VnMiningServer/VnMiningServer.csproj" />
+  <Project Path="VnMiningServer.Tests/VnMiningServer.Tests.csproj" />
+</Solution>
