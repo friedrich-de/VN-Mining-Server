@@ -62,7 +62,11 @@ function backend(start: SettingsView, anki: { server?: Collection; device?: Coll
       return new Response('server = https://vn.example/base\nkey = the-key\n');
     }
     if (request.path === 'Dictionaries') {
-      return json({ Dictionaries: [], Import: { State: 'idle', Progress: 0 }, MayManage: true });
+      return json({
+        Dictionaries: [],
+        Import: { State: 'idle', Progress: 0, Waiting: 0, Finished: [] },
+        MayManage: true,
+      });
     }
     if (request.path === 'Anki') {
       if (anki.server === undefined) {

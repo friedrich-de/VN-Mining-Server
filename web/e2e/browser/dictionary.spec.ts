@@ -3,7 +3,14 @@ import type { APIRequestContext, Page } from '@playwright/test';
 import { guessRoles } from '../../src/anki/pageSettings';
 import { LAPIS_FIELDS } from '../../src/testing/ankiCollection';
 import type { StandInAnki } from '../support/ankiConnect';
-import { uploadDictionary, wordsDictionary } from '../support/dictionaries';
+import {
+  type DictionaryList,
+  importEnded,
+  sendDictionary,
+  serveFiles,
+  uploadDictionary,
+  wordsDictionary,
+} from '../support/dictionaries';
 import { expect, saveSettings, test } from '../support/fixtures';
 import type { PretendGame } from '../support/game';
 import { tapCharacter } from '../support/lines';
@@ -361,6 +368,124 @@ test.describe('the dictionaries in the settings', () => {
     await expect(page.getByTestId('dictionary-message')).toContainText(
       'The address could not be reached:',
     );
+  });
+
+  test('take several files picked at once, and say how each of them ended', async ({
+    openPage,
+    api,
+  }) => {
+    await uploadDictionary(api, wordsDictionary());
+    const page = await openPage();
+    await page.getByTestId('open-settings').click();
+    const section = page.getByTestId('dictionaries');
+    await expect(section.getByTestId('dictionary-E2E Words')).toBeVisible();
+
+    await page.getByTestId('dictionary-file').setInputFiles([
+      {
+        name: 'one.zip',
+        mimeType: 'application/zip',
+        buffer: yomitanZip(wordsDictionary('One More')),
+      },
+      { name: 'other.zip', mimeType: 'application/zip', buffer: Buffer.from('not a zip') },
+      {
+        name: 'two.zip',
+        mimeType: 'application/zip',
+        buffer: yomitanZip(wordsDictionary('Two More')),
+      },
+    ]);
+
+    await expect(page.getByTestId('dictionary-message')).toHaveText(
+      '2 dictionaries are ready: One More, Two More.\n' +
+        'other.zip: That file is not a zip. A Yomitan dictionary is a zip with an index.json in it.',
+      { useInnerText: true },
+    );
+    // In the order they were picked, behind the one that was there.
+    await expect(section.locator('.dictionary .title')).toHaveText([
+      'E2E Words',
+      'One More',
+      'Two More',
+    ]);
+    await expect(page.getByTestId('dictionary-file')).toBeVisible();
+  });
+
+  test('wait their turn when they are sent while another is imported', async ({ api }) => {
+    let release = (): void => undefined;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const publisher = await serveFiles(
+      { '/first.zip': yomitanZip(wordsDictionary('First')) },
+      held,
+    );
+    try {
+      const started = await api.post('/Api/Dictionaries/Download', {
+        data: { Url: `${publisher.url}/first.zip` },
+      });
+      expect(started.status(), await started.text()).toBe(202);
+
+      const second = await sendDictionary(api, 'second.zip', yomitanZip(wordsDictionary('Second')));
+      expect(second.Import).toMatchObject({ State: 'downloading', Waiting: 1 });
+      await sendDictionary(api, 'other.zip', Buffer.from('not a zip'));
+      const fourth = await sendDictionary(api, 'fourth.zip', yomitanZip(wordsDictionary('Fourth')));
+      expect(fourth.Import).toMatchObject({
+        State: 'downloading',
+        Source: `${publisher.url}/first.zip`,
+        Waiting: 3,
+      });
+      expect(fourth.Dictionaries).toEqual([]);
+
+      release();
+      const list = await importEnded(api);
+      expect(list.Dictionaries.map((item) => item.Title)).toEqual(['First', 'Second', 'Fourth']);
+      expect(list.Import).toMatchObject({ State: 'done', Title: 'Fourth', Waiting: 0 });
+      expect(
+        list.Import.Finished.map((outcome) => [
+          outcome.Number,
+          outcome.Source,
+          outcome.Title ?? outcome.Error,
+        ]),
+      ).toEqual([
+        [1, `${publisher.url}/first.zip`, 'First'],
+        [2, 'second.zip', 'Second'],
+        [
+          3,
+          'other.zip',
+          'That file is not a zip. A Yomitan dictionary is a zip with an index.json in it.',
+        ],
+        [4, 'fourth.zip', 'Fourth'],
+      ]);
+    } finally {
+      release();
+      await publisher.stop();
+    }
+  });
+
+  test('are let go of when the import they wait behind is stopped', async ({ api }) => {
+    const publisher = await serveFiles(
+      { '/first.zip': yomitanZip(wordsDictionary('First')) },
+      new Promise(() => undefined),
+    );
+    try {
+      await api.post('/Api/Dictionaries/Download', {
+        data: { Url: `${publisher.url}/first.zip` },
+      });
+      const waits = await sendDictionary(api, 'waits.zip', yomitanZip(wordsDictionary('Waits')));
+      expect(waits.Import.Waiting).toBe(1);
+
+      const stopped = await api.delete('/Api/Dictionaries/Import');
+      expect(stopped.status(), await stopped.text()).toBe(200);
+      expect(((await stopped.json()) as DictionaryList).Import.Waiting).toBe(0);
+
+      const list = await importEnded(api);
+      expect(list.Import).toMatchObject({ State: 'failed', Error: 'The import was stopped.' });
+      expect(list.Dictionaries).toEqual([]);
+      expect(list.Import.Finished.map((outcome) => [outcome.Source, outcome.Error])).toEqual([
+        ['waits.zip', 'The import was stopped.'],
+        [`${publisher.url}/first.zip`, 'The import was stopped.'],
+      ]);
+    } finally {
+      await publisher.stop();
+    }
   });
 
   test('take an audio source for words, which the page never shows again', async ({ openPage }) => {

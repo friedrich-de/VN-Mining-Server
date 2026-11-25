@@ -75,8 +75,8 @@ export interface ServerApi {
   lookUp(text: string, signal?: AbortSignal): Promise<Lookup>;
   /** A picture of a dictionary's definitions. */
   dictionaryPicture(id: string, path: string): Promise<Blob>;
-  /** Imports a dictionary's zip. */
-  uploadDictionary(file: Blob, name: string): Promise<DictionariesView>;
+  /** Imports a dictionary's zip, after those that wait already. */
+  uploadDictionary(file: Blob, name: string, signal?: AbortSignal): Promise<DictionariesView>;
   /** The server downloads a dictionary's zip and imports it. */
   downloadDictionary(url: string): Promise<DictionariesView>;
   stopDictionaryImport(): Promise<DictionariesView>;
@@ -207,11 +207,12 @@ export function createServerApi(fetchFn: Fetch, base: string): ServerApi {
     dictionaryPicture: (id, path) =>
       file(dictionaries(`/${encodeURIComponent(id)}/Media?${query({ path })}`), undefined),
 
-    uploadDictionary: async (zip, name) => {
+    uploadDictionary: async (zip, name, signal) => {
       const response = await send(fetchFn, dictionaries(`?${query({ name })}`), {
         method: 'POST',
         headers: { Accept: 'application/json', 'Content-Type': 'application/zip' },
         body: zip,
+        ...(signal === undefined ? {} : { signal }),
       });
       return (await response.json()) as DictionariesView;
     },
