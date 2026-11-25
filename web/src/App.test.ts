@@ -50,7 +50,11 @@ function server(
     if (request.path === 'Status') return json(status({ Version: '0.1.0', MaxLines: 500 }));
     if (request.path === 'Settings') return json(settings());
     if (request.path === 'Dictionaries') {
-      return json({ Dictionaries: [], Import: { State: 'idle', Progress: 0 }, MayManage: true });
+      return json({
+        Dictionaries: [],
+        Import: { State: 'idle', Progress: 0, Waiting: 0, Finished: [] },
+        MayManage: true,
+      });
     }
     return undefined;
   });

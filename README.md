@@ -120,7 +120,7 @@ To send new cards to AnkiWeb right away, press **Sync Anki now**, the round arro
 
 ## The dictionary
 
-No dictionary comes with the server. Add them in the page's settings: Jitendex and JMnedict with one tap, or any Yomitan dictionary from an address or a file. Dictionaries can be put in order, turned off and removed. Frequency and pitch accent dictionaries in Yomitan's format work as well.
+No dictionary comes with the server. Add them in the page's settings: Jitendex and JMnedict with one tap, or any Yomitan dictionary from an address or from files, several at once if you like. The server imports them one after another, each in a few seconds (Jitendex in 2 to 4). Dictionaries can be put in order, turned off and removed. Frequency and pitch accent dictionaries in Yomitan's format work as well.
 
 Looking up can be turned off in the settings, for example to keep using your own Yomitan with "Add to my newest card". There, too, the popup's text can be made smaller or larger, its tags hidden, and definitions laid out compactly.
 
