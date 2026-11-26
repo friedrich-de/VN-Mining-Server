@@ -6,6 +6,7 @@ import type { StandInAnki } from '../support/ankiConnect';
 import {
   type DictionaryList,
   importEnded,
+  marksDictionary,
   sendDictionary,
   serveFiles,
   uploadDictionary,
@@ -146,6 +147,39 @@ test.describe('a word tapped in a line', () => {
     await expect(popup(page)).toBeHidden();
     await line(page, 1).getByRole('checkbox').click();
     await expect(line(page, 1).getByRole('checkbox')).toBeChecked();
+  });
+
+  test('shows the pictures a dictionary’s zip names in Shift-JIS', async ({
+    openPage,
+    game,
+    media,
+    api,
+  }) => {
+    // As a real Daijirin comes: its marks are named in Shift-JIS, with the names in UTF-8 beside
+    // them, where Yomitan reads them.
+    await uploadDictionary(api, marksDictionary());
+    await scene(game, media);
+    const page = await openPage();
+    await expect(line(page, 2)).toBeVisible();
+    const pictures: string[] = [];
+    page.on('response', (response) => {
+      if (response.url().includes('/Media?path=gaiji')) pictures.push(String(response.status()));
+    });
+    await tapCharacter(page, line(page, 1), '昨');
+    await expect(popup(page).getByText('(ナリ) the day before today')).toBeVisible();
+
+    // Both marks, the SVG and the PNG, are drawn, and none failed.
+    const marks = popup(page).locator('.dictionary-popup [data-image-load-state]');
+    await expect(marks).toHaveCount(2);
+    await expect
+      .poll(() =>
+        marks.evaluateAll((links) =>
+          links.map((link) => link.getAttribute('data-image-load-state')),
+        ),
+      )
+      .toEqual(['loaded', 'loaded']);
+    await expect(popup(page)).not.toContainText('Image failed to load');
+    expect(pictures).toEqual(['200', '200']);
   });
 
   test('stays in view while the game goes on', async ({ openPage, game, media }) => {
