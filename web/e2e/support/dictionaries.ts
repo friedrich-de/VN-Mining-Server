@@ -75,6 +75,71 @@ export function wordsDictionary(title = 'E2E Words'): TestDictionary {
   };
 }
 
+/**
+ * A dictionary that marks its definitions with small pictures, as Daijirin's for a word's old
+ * form, and that is packed as a real Daijirin comes, by a packer on a Japanese Windows: the SVG's
+ * name is written in Shift-JIS, with the name in UTF-8 in a field beside it.
+ */
+export function marksDictionary(title = 'E2E Marks'): TestDictionary {
+  return {
+    title,
+    terms: [
+      term(
+        '昨日',
+        'きのう',
+        '',
+        [
+          {
+            type: 'structured-content',
+            content: [
+              {
+                tag: 'img',
+                path: 'gaiji/文語.svg',
+                height: 1,
+                sizeUnits: 'em',
+                appearance: 'monochrome',
+                background: false,
+                collapsible: false,
+                collapsed: false,
+              },
+              { tag: 'span', content: '(ナリ) the day before today' },
+              { tag: 'br' },
+              {
+                tag: 'img',
+                path: 'gaiji/派生.png',
+                height: 1,
+                sizeUnits: 'em',
+                collapsible: false,
+              },
+              { tag: 'span', content: '—さ(名)' },
+            ],
+          },
+        ],
+        'n',
+      ),
+    ],
+    files: {
+      'gaiji/文語.svg': Buffer.from(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">' +
+          '<rect x="1" y="1" width="14" height="14" rx="3" fill="none" stroke="black"/></svg>',
+      ),
+      // A 1×1 PNG.
+      'gaiji/派生.png': Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+        'base64',
+      ),
+    },
+    shiftJisNames: {
+      // gaiji/文語.svg
+      'gaiji/文語.svg': Buffer.concat([
+        Buffer.from('gaiji/'),
+        Buffer.from([0x95, 0xb6, 0x8c, 0xea]),
+        Buffer.from('.svg'),
+      ]),
+    },
+  };
+}
+
 export async function listDictionaries(api: APIRequestContext): Promise<DictionaryList> {
   const response = await api.get('/Api/Dictionaries');
   expect(response.status(), await response.text()).toBe(200);

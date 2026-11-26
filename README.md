@@ -120,7 +120,9 @@ To send new cards to AnkiWeb right away, press **Sync Anki now**, the round arro
 
 ## The dictionary
 
-No dictionary comes with the server. Add them in the page's settings: Jitendex and JMnedict with one tap, or any Yomitan dictionary from an address or from files, several at once if you like. The server imports them one after another, each in a few seconds (Jitendex in 2 to 4). Dictionaries can be put in order, turned off and removed. Frequency and pitch accent dictionaries in Yomitan's format work as well.
+No dictionary comes with the server. Add them in the page's settings: Jitendex and JMnedict with one tap, or any Yomitan dictionary from an address or from files, several at once if you like. The server imports them one after another, each in a few seconds (Jitendex in 2 to 4). Dictionaries can be put in order, turned off and removed. Importing a dictionary that is there already puts the new import in its place. Frequency and pitch accent dictionaries in Yomitan's format work as well.
+
+If a dictionary's small pictures, such as Daijirin's labels 漢 and 文, say "Image failed to load", it was imported by a version before 0.2.1, which kept pictures with Shift-JIS names in the zip under names no definition asks for. Import it once more.
 
 Looking up can be turned off in the settings, for example to keep using your own Yomitan with "Add to my newest card". There, too, the popup's text can be made smaller or larger, its tags hidden, and definitions laid out compactly.
 
@@ -146,9 +148,15 @@ cd web && npm ci && npm run check
 
 # End to end: the page in a real browser at desktop and at phone size, against the built server
 dev/e2e.sh
+
+# Dictionaries of your own against the importer, outside the server: what each import counted
+# and whether every picture its definitions ask for is there
+VN_MINING_TEST_DICTIONARIES=<folder of zips> dotnet test --project VnMiningServer.Tests -c Release -- --filter-class "*RealDictionaryTests"
 ```
 
 `dev/e2e.sh` needs Playwright's Chromium (`cd web && npx playwright install chromium`). Each test starts a server of its own on a free port with an empty data folder, a pretend game sends it lines with voices and screenshots made by ffmpeg, and cards go to a pretend AnkiConnect.
+
+The dictionary check is the tool for a dictionary that does not import or shows no pictures. It fails with what it found, and writes the same to the file `VN_MINING_TEST_DICTIONARIES_REPORT` names. A dictionary's zip is read as Yomitan reads it, because real dictionaries count on it: a file's name that the packer wrote in its own encoding (Shift-JIS on a Japanese Windows) is taken from the "Unicode Path" field beside it (`Dictionary/ZipNames.cs`), and a checksum that does not fit refuses nothing as long as the file unpacks whole, since some dictionaries are packed with wrong ones.
 
 To work on the page against a running server: `cd web && VN_MINING_URL=http://127.0.0.1:8733 npm run dev`.
 
